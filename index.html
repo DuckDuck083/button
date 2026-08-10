@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <title>The Button That Hates You</title>
+  <style>
+    :root { --pink:#ff2bd6; --cyan:#24f6ff; --lime:#b6ff38; --ink:#060711; --danger:#ff315c; }
+    * { box-sizing:border-box; }
+    html, body { width:100%; height:100%; margin:0; overflow:hidden; }
+    body { color:#fff; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif; background:#050610; user-select:none; touch-action:none; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; background:
+      radial-gradient(circle at 15% 20%,#18246888 0,transparent 28%), radial-gradient(circle at 80% 70%,#64115766 0,transparent 30%),
+      linear-gradient(#ffffff05 1px,transparent 1px),linear-gradient(90deg,#ffffff05 1px,transparent 1px); background-size:auto,auto,44px 44px,44px 44px; }
+    body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:30; background:repeating-linear-gradient(0deg,#0000 0 3px,#0004 4px); opacity:.22; }
+    button { font:inherit; }
+    .hidden { opacity:0 !important; pointer-events:none !important; visibility:hidden; }
+    #app { height:100%; position:relative; }
+    .screen { position:absolute; inset:0; display:grid; place-items:center; z-index:40; padding:24px; background:#050610cc; backdrop-filter:blur(12px); transition:.35s; }
+    .card { width:min(680px,100%); text-align:center; padding:clamp(28px,6vw,64px); border:1px solid #ffffff20; border-radius:28px; background:linear-gradient(145deg,#14162ad9,#090a15e8); box-shadow:0 30px 90px #000b,inset 0 1px #fff2; }
+    .eyebrow { color:var(--cyan); font-weight:900; letter-spacing:.25em; font-size:12px; }
+    h1 { margin:12px 0 8px; font-size:clamp(43px,9vw,86px); line-height:.87; letter-spacing:-.065em; text-transform:uppercase; text-shadow:0 0 30px #ff2bd655; }
+    .subtitle { color:#bec4df; font-size:clamp(16px,3vw,22px); margin:20px 0 28px; }
+    .primary,.secondary { cursor:pointer; border:0; border-radius:999px; font-weight:1000; letter-spacing:.08em; text-transform:uppercase; padding:16px 28px; transition:.18s transform,.18s box-shadow; }
+    .primary { color:#120617; background:linear-gradient(135deg,var(--cyan),#aaffec); box-shadow:0 0 30px #24f6ff66; }
+    .primary:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 45px #24f6ffaa; }
+    .instructions { font-size:13px; color:#777f9d; margin-top:18px; }
+    #hud { position:absolute; z-index:10; top:0; left:0; right:0; padding:16px clamp(14px,3vw,32px); display:flex; align-items:center; gap:clamp(9px,2vw,26px); background:linear-gradient(#050610e6,transparent); }
+    .stat { min-width:64px; }
+    .label { font-size:10px; font-weight:900; letter-spacing:.16em; color:#6f7693; }
+    .value { display:block; font-size:clamp(18px,3vw,27px); line-height:1.05; font-weight:1000; font-variant-numeric:tabular-nums; }
+    #scoreVal { color:var(--cyan); } #comboVal { color:var(--lime); }
+    .timer { margin-left:auto; text-align:right; } .timer .value.danger { color:var(--danger); animation:pulse .45s infinite alternate; }
+    #restart { border:1px solid #ffffff22; background:#ffffff09; color:#aab0ca; padding:9px 13px; border-radius:10px; cursor:pointer; font-weight:800; }
+    #progressWrap { position:absolute; top:79px; left:clamp(14px,3vw,32px); right:clamp(14px,3vw,32px); height:5px; z-index:12; background:#ffffff10; border-radius:9px; overflow:hidden; }
+    #progress { height:100%; width:0; border-radius:9px; background:linear-gradient(90deg,var(--cyan),var(--pink)); box-shadow:0 0 13px var(--pink); transition:width .3s; }
+    #arena { position:absolute; inset:88px 0 0; overflow:hidden; }
+    #message { position:absolute; z-index:8; top:8%; left:50%; transform:translateX(-50%); text-align:center; width:90%; font-size:clamp(16px,3vw,28px); font-weight:1000; letter-spacing:.06em; text-transform:uppercase; color:#f2dfff; text-shadow:0 0 18px var(--pink); transition:.2s; pointer-events:none; }
+    #realButton,.decoy { position:absolute; border:0; border-radius:50%; display:grid; place-items:center; text-align:center; font-weight:1000; line-height:.9; cursor:pointer; transform:translate(-50%,-50%); }
+    #realButton { z-index:6; width:clamp(112px,18vw,165px); aspect-ratio:1; padding:12px; color:#fff; background:radial-gradient(circle at 35% 28%,#ff8bea,var(--pink) 37%,#a8008b 72%); border:5px solid #ffbbf2; box-shadow:0 0 12px #fff,0 0 34px var(--pink),0 0 85px #ff2bd677,inset 0 -12px 20px #67004e88; font-size:clamp(16px,3vw,24px); transition:left .18s cubic-bezier(.2,.8,.2,1),top .18s cubic-bezier(.2,.8,.2,1),width .2s,opacity .14s,filter .2s; animation:buttonIdle 1.6s infinite alternate ease-in-out; }
+    #realButton:hover { filter:brightness(1.12); }
+    #realButton.squish { animation:squish .2s; }
+    #realButton.boss { animation:bossPulse .25s infinite alternate; background:radial-gradient(circle at 35% 28%,#fff,#ff315c 30%,#750018 75%); box-shadow:0 0 20px #fff,0 0 65px #ff315c,0 0 130px #ff315c99; }
+    .decoy { z-index:5; width:clamp(72px,11vw,105px); aspect-ratio:1; padding:8px; color:white; background:radial-gradient(circle at 35% 30%,#ff7d94,#d4173d 45%,#680016); border:3px solid #ff91a6; box-shadow:0 0 28px #ff315c88; font-size:13px; animation:decoyIn .24s both; }
+    .decoy.cyan { background:radial-gradient(circle at 35% 30%,#8cffff,#09a3ac 48%,#03484f); border-color:#baffff; box-shadow:0 0 28px #24f6ff88; }
+    .particle { position:absolute; z-index:4; width:8px; height:8px; border-radius:50%; background:var(--cyan); box-shadow:0 0 10px currentColor; pointer-events:none; animation:particle .7s ease-out forwards; }
+    .floatScore { position:absolute; z-index:9; font-size:21px; font-weight:1000; color:var(--lime); pointer-events:none; animation:floatUp .7s forwards; }
+    .eventBanner { position:absolute; z-index:20; inset:40% 0 auto; text-align:center; font-size:clamp(30px,7vw,72px); line-height:.9; font-weight:1000; letter-spacing:-.04em; color:#fff; text-shadow:4px 4px #ff2bd6, -3px -3px #24f6ff; animation:banner 1.3s both; pointer-events:none; }
+    #arena.shake { animation:shake .3s; }
+    .result { font-size:clamp(54px,12vw,100px); font-weight:1000; color:var(--pink); line-height:1; }
+    @keyframes buttonIdle { to { transform:translate(-50%,-50%) scale(1.055); } }
+    @keyframes pulse { to { transform:scale(1.12); } }
+    @keyframes squish { 50% { transform:translate(-50%,-50%) scale(.78,1.18); } }
+    @keyframes bossPulse { to { transform:translate(-50%,-50%) scale(1.12) rotate(4deg); } }
+    @keyframes decoyIn { from { opacity:0; transform:translate(-50%,-50%) scale(.2) rotate(-90deg); } }
+    @keyframes particle { to { transform:translate(var(--dx),var(--dy)) scale(0); opacity:0; } }
+    @keyframes floatUp { to { transform:translateY(-65px) scale(1.4); opacity:0; } }
+    @keyframes banner { 0% { opacity:0; transform:scale(2.2) rotate(-3deg); } 20%,70% { opacity:1; transform:scale(1); } 100% { opacity:0; transform:scale(.7); } }
+    @keyframes shake { 20%{transform:translate(-9px,5px)}40%{transform:translate(7px,-6px)}60%{transform:translate(-5px,-3px)}80%{transform:translate(6px,4px)} }
+    @keyframes squish { 50% { transform:translate(-50%,-50%) scale(.72,1.2); } }
+    @media(max-width:600px){ #hud{gap:10px;padding-top:12px}.stat{min-width:49px}.label{font-size:8px}#restart{padding:8px;font-size:11px}#progressWrap{top:66px}#arena{inset:74px 0 0}.card{border-radius:20px} }
+  </style>
+</head>
+<body>
+<main id="app">
+  <section id="startScreen" class="screen">
+    <div class="card"><div class="eyebrow">A VERY FAIR ARCADE GAME</div><h1>The Button<br>That Hates You</h1><p class="subtitle">Click the button. If you can.</p><button id="startBtn" class="primary">Start the suffering</button><p class="instructions">60 seconds · rapid clicks build combos · red buttons are probably lying</p></div>
+  </section>
+  <header id="hud">
+    <div class="stat"><span class="label">SCORE</span><span id="scoreVal" class="value">0</span></div>
+    <div class="stat"><span class="label">BEST</span><span id="bestVal" class="value">0</span></div>
+    <div class="stat"><span class="label">LEVEL</span><span id="levelVal" class="value">1</span></div>
+    <div class="stat"><span class="label">COMBO</span><span id="comboVal" class="value">x1</span></div>
+    <button id="restart">RESTART</button>
+    <div class="stat timer"><span class="label">TIME</span><span id="timeVal" class="value">60.0</span></div>
+  </header>
+  <div id="progressWrap"><div id="progress"></div></div>
+  <section id="arena"><div id="message">It hasn't noticed you yet.</div><button id="realButton">CLICK ME</button></section>
+  <section id="gameOver" class="screen hidden"><div class="card"><div class="eyebrow">THE BUTTON SURVIVED</div><h1>Time's up</h1><div id="finalScore" class="result">0</div><p id="verdict" class="subtitle">The button remains smug.</p><button id="againBtn" class="primary">Try again</button></div></section>
+</main>
+<script>
+(() => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const arena=$('#arena'), real=$('#realButton'), message=$('#message');
+  const scoreEl=$('#scoreVal'),bestEl=$('#bestVal'),levelEl=$('#levelVal'),comboEl=$('#comboVal'),timeEl=$('#timeVal'),progress=$('#progress');
+  const taunts=['CLICK ME','NOPE','TOO SLOW','NICE TRY','WHY?','MISS ME?','ABSOLUTELY NOT','RUDE','STOP THAT','I HAVE RIGHTS'];
+  const comments=['Okay, that one was luck.','The button is mildly annoyed.','Your mouse smells like fear.','Please stop succeeding.','This is becoming a workplace issue.','The button has filed a complaint.'];
+  let state, raf, audio, lastFrame=0, nextEvent=0, bossDone=new Set(), evadeCooldown=0;
+  let best=Number(localStorage.getItem('buttonHatesYouBest')||0); bestEl.textContent=best;
+
+  function freshState(){ return {running:false,score:0,level:1,combo:1,lastClick:0,time:60,difficulty:0,boss:false,invisible:false,reverse:false}; }
+  state=freshState();
+  function initAudio(){ if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)(); if(audio.state==='suspended') audio.resume(); }
+  function sound(type){ if(!audio)return; const o=audio.createOscillator(),g=audio.createGain(); o.connect(g);g.connect(audio.destination); const now=audio.currentTime; o.type=type==='bad'?'sawtooth':'square'; o.frequency.setValueAtTime(type==='bad'?150:320,now); o.frequency.exponentialRampToValueAtTime(type==='bad'?55:720,now+.11); g.gain.setValueAtTime(.09,now);g.gain.exponentialRampToValueAtTime(.001,now+.13);o.start(now);o.stop(now+.14); }
+  function start(){ initAudio(); document.querySelectorAll('.decoy,.eventBanner,.particle,.floatScore').forEach(e=>e.remove()); state=freshState();state.running=true;bossDone.clear(); updateHUD(); $('#startScreen').classList.add('hidden');$('#gameOver').classList.add('hidden'); real.className='';real.style.width='';real.style.opacity='1';real.style.pointerEvents='auto'; moveReal(true); nextEvent=performance.now()+7000;lastFrame=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop); }
+  function end(){ if(!state.running)return;state.running=false;cancelAnimationFrame(raf);clearDecoys(); if(state.score>best){best=state.score;localStorage.setItem('buttonHatesYouBest',best);bestEl.textContent=best;} $('#finalScore').textContent=state.score;$('#verdict').textContent=state.score<20?'The button barely noticed you.':state.score<60?'Respectable. Infuriating, but respectable.':'The button will remember this humiliation.';$('#gameOver').classList.remove('hidden'); }
+  function updateHUD(){scoreEl.textContent=state.score;levelEl.textContent=state.level;comboEl.textContent='x'+state.combo;timeEl.textContent=Math.max(0,state.time).toFixed(1);timeEl.classList.toggle('danger',state.time<10);progress.style.width=((state.score%5)/5*100)+'%';}
+  function loop(now){if(!state.running)return;const dt=Math.min((now-lastFrame)/1000,.05);lastFrame=now;state.time-=dt;if(state.time<=0){state.time=0;updateHUD();end();return;}if(now-state.lastClick>1350)state.combo=1;if(now>nextEvent){surprise();nextEvent=now+6500+Math.random()*6500;}updateHUD();raf=requestAnimationFrame(loop);}
+  function moveReal(instant=false){const r=arena.getBoundingClientRect(),size=real.getBoundingClientRect().width||130,pad=size/2+12;real.style.transitionDuration=instant?'0s':'';real.style.left=(pad+Math.random()*Math.max(1,r.width-pad*2))+'px';real.style.top=(pad+40+Math.random()*Math.max(1,r.height-pad*2-50))+'px';if(instant)requestAnimationFrame(()=>real.style.transitionDuration='');real.textContent=taunts[Math.floor(Math.random()*taunts.length)];}
+  function realClick(e){if(!state.running)return;e.stopPropagation();const now=performance.now();state.combo=now-state.lastClick<900?Math.min(8,state.combo+1):1;state.lastClick=now;const points=state.combo+(state.boss?2:0);state.score+=points;const old=state.level;state.level=1+Math.floor(state.score/5);state.difficulty=Math.min(1,(state.level-1)/30);if(state.score>best){best=state.score;bestEl.textContent=best;}sound('good');burst(e.clientX,e.clientY,points);real.classList.remove('squish');void real.offsetWidth;real.classList.add('squish');message.textContent=comments[Math.floor(Math.random()*comments.length)];moveReal();if(state.level!==old){shake();const crossedBoss=Math.floor(state.level/10)*10;if(crossedBoss>Math.floor(old/10)*10&&!bossDone.has(crossedBoss))boss(crossedBoss);}if(Math.random()<.08+state.difficulty*.14)sizeTrick();if(Math.random()<state.difficulty*.17)spawnDecoys(2+Math.floor(Math.random()*3));updateHUD();}
+  function burst(x,y,points){const ar=arena.getBoundingClientRect();for(let i=0;i<15;i++){const p=document.createElement('i');p.className='particle';p.style.left=(x-ar.left)+'px';p.style.top=(y-ar.top)+'px';p.style.setProperty('--dx',(Math.random()*170-85)+'px');p.style.setProperty('--dy',(Math.random()*170-85)+'px');p.style.background=i%2?'var(--pink)':'var(--cyan)';arena.append(p);setTimeout(()=>p.remove(),750);}const f=document.createElement('b');f.className='floatScore';f.textContent='+'+points;f.style.left=(x-ar.left)+'px';f.style.top=(y-ar.top)+'px';arena.append(f);setTimeout(()=>f.remove(),750);}
+  function spawnDecoys(n=3){for(let i=0;i<n;i++){const d=document.createElement('button');d.className='decoy'+(Math.random()<.25?' cyan':'');d.textContent=taunts[Math.floor(Math.random()*taunts.length)];d.style.left=(8+Math.random()*84)+'%';d.style.top=(14+Math.random()*76)+'%';d.onclick=e=>{e.stopPropagation();if(!state.running)return;state.score=Math.max(0,state.score-3);state.level=1+Math.floor(state.score/5);state.combo=1;sound('bad');shake();message.textContent='THAT ONE WAS FAKE. -3';d.remove();updateHUD();};arena.append(d);setTimeout(()=>d.remove(),3500+Math.random()*2500);}}
+  function clearDecoys(){document.querySelectorAll('.decoy').forEach(d=>d.remove());}
+  function sizeTrick(){const size=Math.random()<.58?50:Math.min(240,arena.clientWidth*.35);real.style.width=size+'px';setTimeout(()=>{if(state.running&&!state.boss)real.style.width='';},1700);}
+  function vanish(){state.invisible=true;real.style.opacity='0';real.style.pointerEvents='none';message.textContent='THE BUTTON HAS LEFT THE CHAT';setTimeout(()=>{if(state.running){state.invisible=false;real.style.opacity='1';real.style.pointerEvents='auto';moveReal();}},1100);}
+  function shake(){arena.classList.remove('shake');void arena.offsetWidth;arena.classList.add('shake');}
+  function banner(text){const b=document.createElement('div');b.className='eventBanner';b.textContent=text;arena.append(b);setTimeout(()=>b.remove(),1400);shake();}
+  function boss(level){bossDone.add(level);state.boss=true;banner(level>=40?'FINAL BOSS: THE BUTTON':'BOSS LEVEL '+level);real.classList.add('boss');message.textContent='SURVIVE 7 SECONDS OF NONSENSE';spawnDecoys(7);const timer=setInterval(()=>{if(!state.running||!state.boss){clearInterval(timer);return;}moveReal();if(Math.random()<.6)spawnDecoys(1);},480);setTimeout(()=>{state.boss=false;real.classList.remove('boss');clearInterval(timer);clearDecoys();message.textContent='The button needs a tiny lie-down.';},7000);}
+  function surprise(){if(state.boss)return;const events=[()=>{banner('THE BUTTON IS LEARNING');spawnDecoys(5);},()=>{banner("DON'T TRUST THE RED ONE");real.style.filter='hue-rotate(150deg)';spawnDecoys(4);setTimeout(()=>real.style.filter='',3500);},()=>{banner('IT KNOWS WHERE YOUR MOUSE IS');message.textContent='Proximity panic enabled.';state.difficulty=Math.min(1,state.difficulty+.22);},()=>{banner('TINY MODE');sizeTrick();},()=>{banner('WHERE DID IT GO?');vanish();},()=>{banner('BONUS TIME +5');state.time+=5;}];events[Math.floor(Math.random()*events.length)]();}
+  arena.addEventListener('pointermove',e=>{if(!state.running||state.invisible)return;const b=real.getBoundingClientRect(),dx=e.clientX-(b.left+b.width/2),dy=e.clientY-(b.top+b.height/2),dist=Math.hypot(dx,dy);const threshold=90+state.level*2;if(dist<threshold&&performance.now()>evadeCooldown&&Math.random()<.22+state.difficulty*.48){evadeCooldown=performance.now()+280;moveReal();sound('bad');}});
+  real.addEventListener('click',realClick);$('#startBtn').onclick=start;$('#againBtn').onclick=start;$('#restart').onclick=()=>{if(state.running)start();};
+  window.addEventListener('resize',()=>{if(state.running)moveReal(true);});
+  moveReal(true);
+})();
+</script>
+</body>
+</html>
